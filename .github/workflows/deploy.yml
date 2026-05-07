@@ -25,7 +25,7 @@ jobs:
           node-version: '22'
           cache: 'npm'
 
-      # ── 3. Install ────────────────────────────────────────────────────────────
+      # ── 3. Install deps ───────────────────────────────────────────────────────
       - name: 📦 Install dependencies
         run: npm ci
 
@@ -35,32 +35,42 @@ jobs:
         env:
           NODE_ENV: production
 
-      # ── 5. Deploy via FTPS ────────────────────────────────────────────────────
-      # Fix: ECONNRESET → use ftps (FTP over TLS) instead of plain ftp
-      # AwanData cPanel requires encrypted connection on port 21 with TLS
-      - name: 🚀 Deploy to cPanel via FTPS
-        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
-        with:
-          server: ${{ secrets.FTP_SERVER }}
-          username: ${{ secrets.FTP_USERNAME }}
-          password: ${{ secrets.FTP_PASSWORD }}
-          port: 21
-          protocol: ftps          # ← was "ftp", ECONNRESET fix
-          security: loose         # accept self-signed TLS cert (common on shared hosting)
-          local-dir: ./dist/
-          server-dir: ${{ secrets.FTP_REMOTE_DIR }}
-          dangerous-clean-slate: false
-          log-level: verbose      # show detailed logs for debugging
-          timeout: 60000          # 60s timeout per operation
-          exclude: |
-            **/.git*
-            **/.git*/**
-            **/node_modules/**
+      # ── 5. Install lftp ───────────────────────────────────────────────────────
+      # lftp handles passive mode properly — fixes ECONNRESET on data socket
+      - name: 🔧 Install lftp
+        run: sudo apt-get install -y lftp
 
-      # ── 6. Done ───────────────────────────────────────────────────────────────
+      # ── 6. Deploy via lftp (passive FTP) ─────────────────────────────────────
+      - name: 🚀 Deploy via lftp
+        env:
+          FTP_SERVER:     ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME:   ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD:   ${{ secrets.FTP_PASSWORD }}
+          FTP_REMOTE_DIR: ${{ secrets.FTP_REMOTE_DIR }}
+        run: |
+          lftp -c "
+            set ftp:ssl-allow yes;
+            set ftp:ssl-force no;
+            set ftp:passive-mode yes;
+            set ftp:use-feat yes;
+            set net:timeout 60;
+            set net:max-retries 5;
+            set net:reconnect-interval-base 5;
+            set ssl:verify-certificate no;
+            open -u '$FTP_USERNAME','$FTP_PASSWORD' ftp://$FTP_SERVER;
+            mirror \
+              --reverse \
+              --delete \
+              --verbose \
+              --no-perms \
+              --parallel=4 \
+              ./dist/ $FTP_REMOTE_DIR;
+            quit
+          "
+
+      # ── 7. Done ───────────────────────────────────────────────────────────────
       - name: ✅ Deploy complete
         run: |
           echo "✅ Deployed to https://gocalang.my.id"
           echo "Branch : ${{ github.ref_name }}"
           echo "Commit : ${{ github.sha }}"
-          echo "Time   : $(date)"
