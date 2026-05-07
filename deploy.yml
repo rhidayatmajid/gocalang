@@ -1,0 +1,76 @@
+name: 🚀 Deploy to gocalang.my.id
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # ── 1. Checkout ───────────────────────────────────────────────────────────
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Node.js ────────────────────────────────────────────────────────────
+      - name: ⚙️ Setup Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      # ── 3. Install deps ───────────────────────────────────────────────────────
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      # ── 4. Build ──────────────────────────────────────────────────────────────
+      - name: 🏗️ Build production
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      # ── 5. Install lftp ───────────────────────────────────────────────────────
+      # lftp handles passive mode properly — fixes ECONNRESET on data socket
+      - name: 🔧 Install lftp
+        run: sudo apt-get install -y lftp
+
+      # ── 6. Deploy via lftp (passive FTP) ─────────────────────────────────────
+      - name: 🚀 Deploy via lftp
+        env:
+          FTP_SERVER:     ${{ secrets.FTP_SERVER }}
+          FTP_USERNAME:   ${{ secrets.FTP_USERNAME }}
+          FTP_PASSWORD:   ${{ secrets.FTP_PASSWORD }}
+          FTP_REMOTE_DIR: ${{ secrets.FTP_REMOTE_DIR }}
+        run: |
+          lftp -c "
+            set ftp:ssl-allow yes;
+            set ftp:ssl-force no;
+            set ftp:passive-mode yes;
+            set ftp:use-feat yes;
+            set net:timeout 60;
+            set net:max-retries 5;
+            set net:reconnect-interval-base 5;
+            set ssl:verify-certificate no;
+            open -u '$FTP_USERNAME','$FTP_PASSWORD' ftp://$FTP_SERVER;
+            mirror \
+              --reverse \
+              --delete \
+              --verbose \
+              --no-perms \
+              --parallel=4 \
+              ./dist/ $FTP_REMOTE_DIR;
+            quit
+          "
+
+      # ── 7. Done ───────────────────────────────────────────────────────────────
+      - name: ✅ Deploy complete
+        run: |
+          echo "✅ Deployed to https://gocalang.my.id"
+          echo "Branch : ${{ github.ref_name }}"
+          echo "Commit : ${{ github.sha }}"
