@@ -1,0 +1,61 @@
+name: 🚀 Deploy to gocalang.my.id
+
+on:
+  push:
+    branches:
+      - main      # trigger on push to main
+      - master    # or master
+  workflow_dispatch:  # allow manual trigger from GitHub UI
+
+jobs:
+  build-and-deploy:
+    name: Build & Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout code ──────────────────────────────────────────────────────
+      - name: 📥 Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Setup Node.js ──────────────────────────────────────────────────────
+      - name: ⚙️ Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      # ── 3. Install dependencies ───────────────────────────────────────────────
+      - name: 📦 Install dependencies
+        run: npm ci
+
+      # ── 4. Build ──────────────────────────────────────────────────────────────
+      - name: 🏗️ Build production
+        run: npm run build
+        env:
+          NODE_ENV: production
+
+      # ── 5. Deploy via FTP to cPanel ───────────────────────────────────────────
+      - name: 🚀 Deploy to cPanel via FTP
+        uses: SamKirkland/FTP-Deploy-Action@v4.3.5
+        with:
+          server: ${{ secrets.FTP_SERVER }}
+          username: ${{ secrets.FTP_USERNAME }}
+          password: ${{ secrets.FTP_PASSWORD }}
+          port: 21
+          protocol: ftp
+          local-dir: ./dist/
+          server-dir: ${{ secrets.FTP_REMOTE_DIR }}
+          # Only upload changed files (faster deploys)
+          dangerous-clean-slate: false
+          exclude: |
+            **/.git*
+            **/.git*/**
+            **/node_modules/**
+
+      # ── 6. Notify success ─────────────────────────────────────────────────────
+      - name: ✅ Deploy complete
+        run: |
+          echo "✅ Deployed successfully to https://gocalang.my.id"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Time: $(date)"
