@@ -1,33 +1,32 @@
-import { useState, useEffect, useMemo } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { motion, AnimatePresence } from 'framer-motion'
-import {
-  ArrowLeft,
-  MapPin,
-  Phone,
-  MessageCircle,
-  Images,
-  Building2,
-  Search,
-  AlertCircle,
-  RefreshCw,
-  ExternalLink,
-  Copy,
-  Check,
-} from 'lucide-react'
-import Navbar from '@/components/Navbar'
-import MenuCard from '@/components/MenuCard'
 import FallbackImage from '@/components/FallbackImage'
-import { Skeleton } from '@/components/ui/skeleton'
+import MenuCard from '@/components/MenuCard'
+import Navbar from '@/components/Navbar'
 import { Button } from '@/components/ui/button'
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Skeleton } from '@/components/ui/skeleton'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import {
-  fetchOutlets,
-  fetchMenuItems,
   buildWhatsAppUrl,
-  getMenuSheetFoundName,
+  fetchMenuItems,
+  fetchOutlets
 } from '@/services/googleSheets'
-import type { Outlet, MenuItem } from '@/types'
+import type { MenuItem, Outlet } from '@/types'
+import { AnimatePresence, motion } from 'framer-motion'
+import {
+  AlertCircle,
+  ArrowLeft,
+  Building2,
+  Check,
+  Copy,
+  ExternalLink,
+  Images,
+  MapPin,
+  MessageCircle,
+  Phone,
+  RefreshCw,
+  Search,
+} from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { useNavigate, useParams } from 'react-router-dom'
 
 // ─── Skeleton helpers ─────────────────────────────────────────────────────────
 
@@ -101,9 +100,9 @@ function OutletGallery({ images, outletName }: { images: GalleryImage[]; outletN
   const [lightbox, setLightbox] = useState<number | null>(null)
 
   return (
-    <section className="max-w-6xl mx-auto px-4 pb-10">
+    <section className="max-w-6xl mx-auto px-4 py-8 pb-28">
       {/* Header */}
-      <div className="flex items-center gap-2.5 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-5">
         <div
           className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
           style={{ background: 'rgba(249,115,22,0.12)', color: '#f97316' }}
