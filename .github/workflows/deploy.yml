@@ -3,28 +3,29 @@ name: 🚀 Deploy to gocalang.my.id
 on:
   push:
     branches:
-      - main      # trigger on push to main
-      - master    # or master
-  workflow_dispatch:  # allow manual trigger from GitHub UI
+      - main
+      - master
+  workflow_dispatch:
 
 jobs:
   build-and-deploy:
     name: Build & Deploy
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
-      # ── 1. Checkout code ──────────────────────────────────────────────────────
+      # ── 1. Checkout ───────────────────────────────────────────────────────────
       - name: 📥 Checkout repository
         uses: actions/checkout@v4
 
-      # ── 2. Setup Node.js ──────────────────────────────────────────────────────
-      - name: ⚙️ Setup Node.js 20
+      # ── 2. Node.js ────────────────────────────────────────────────────────────
+      - name: ⚙️ Setup Node.js 22
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'npm'
 
-      # ── 3. Install dependencies ───────────────────────────────────────────────
+      # ── 3. Install ────────────────────────────────────────────────────────────
       - name: 📦 Install dependencies
         run: npm ci
 
@@ -34,28 +35,32 @@ jobs:
         env:
           NODE_ENV: production
 
-      # ── 5. Deploy via FTP to cPanel ───────────────────────────────────────────
-      - name: 🚀 Deploy to cPanel via FTP
+      # ── 5. Deploy via FTPS ────────────────────────────────────────────────────
+      # Fix: ECONNRESET → use ftps (FTP over TLS) instead of plain ftp
+      # AwanData cPanel requires encrypted connection on port 21 with TLS
+      - name: 🚀 Deploy to cPanel via FTPS
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
           username: ${{ secrets.FTP_USERNAME }}
           password: ${{ secrets.FTP_PASSWORD }}
           port: 21
-          protocol: ftp
+          protocol: ftps          # ← was "ftp", ECONNRESET fix
+          security: loose         # accept self-signed TLS cert (common on shared hosting)
           local-dir: ./dist/
           server-dir: ${{ secrets.FTP_REMOTE_DIR }}
-          # Only upload changed files (faster deploys)
           dangerous-clean-slate: false
+          log-level: verbose      # show detailed logs for debugging
+          timeout: 60000          # 60s timeout per operation
           exclude: |
             **/.git*
             **/.git*/**
             **/node_modules/**
 
-      # ── 6. Notify success ─────────────────────────────────────────────────────
+      # ── 6. Done ───────────────────────────────────────────────────────────────
       - name: ✅ Deploy complete
         run: |
-          echo "✅ Deployed successfully to https://gocalang.my.id"
-          echo "Branch: ${{ github.ref_name }}"
-          echo "Commit: ${{ github.sha }}"
-          echo "Time: $(date)"
+          echo "✅ Deployed to https://gocalang.my.id"
+          echo "Branch : ${{ github.ref_name }}"
+          echo "Commit : ${{ github.sha }}"
+          echo "Time   : $(date)"
