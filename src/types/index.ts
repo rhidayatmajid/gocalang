@@ -6,7 +6,11 @@ export interface Outlet {
   phone: string;
   image: string;           // primary hero image (first URL)
   imageFallbacks: string[]; // fallback variants for hero
-  galleryImages: {         // all images from Outlets sheet image_url column
+  galleryImages: {         // from image_url column (outlet photos)
+    src: string;
+    fallbacks: string[];
+  }[];
+  menuGalleryImages: {     // from menus_url column (menu/food photos)
     src: string;
     fallbacks: string[];
   }[];

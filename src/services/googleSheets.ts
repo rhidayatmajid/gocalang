@@ -166,6 +166,21 @@ export async function fetchOutlets(): Promise<Outlet[]> {
         src: normalizeImageUrl(raw),
         fallbacks: buildImageFallbacks(raw),
       }));
+
+      // Parse menus_url — separate column for food/menu photos
+      const rawMenusField = pick(row,
+        'menus_url', 'menusurl', 'Menus URL', 'menus_image', 'menu_photos',
+        'Menu Images', 'menu_images', 'Foto Menu Outlet', 'MenusURL'
+      );
+      const menuGalleryImages = rawMenusField
+        .split(/[,;\n]+/)
+        .map((u: string) => u.trim())
+        .filter(Boolean)
+        .map((raw: string) => ({
+          src: normalizeImageUrl(raw),
+          fallbacks: buildImageFallbacks(raw),
+        }));
+
       return {
         id: pick(row, 'ID', 'id'),
         name: pick(row, 'Name', 'name', 'Nama', 'Nama Outlet', 'outlet_name', 'outletname'),
@@ -175,6 +190,7 @@ export async function fetchOutlets(): Promise<Outlet[]> {
         image: normalizeImageUrl(primaryRaw),
         imageFallbacks: buildImageFallbacks(primaryRaw),
         galleryImages,
+        menuGalleryImages,
         mapsUrl: pick(row, 'Maps URL', 'maps_url', 'mapsurl', 'Maps', 'Google Maps', 'Lokasi', 'maps_link'),
         waNumber: pick(row,
           'WA Number', 'wa_number', 'wanumber', 'WA', 'Whatsapp', 'No WA',

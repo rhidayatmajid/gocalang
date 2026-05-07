@@ -22,8 +22,15 @@ export default function MenuCard({ item, outlet, index }: Props) {
 
   // When menu has no image → use outlet's first gallery image as blurred placeholder
   const hasMenuImages = images.length > 0
-  const outletPlaceholderSrc = outlet.galleryImages?.[0]?.src ?? outlet.image
-  const outletPlaceholderFallbacks = outlet.galleryImages?.[0]?.fallbacks ?? outlet.imageFallbacks
+  // Use menuGalleryImages first as placeholder, fallback to galleryImages then hero
+  const outletPlaceholderSrc =
+    outlet.menuGalleryImages?.[0]?.src ??
+    outlet.galleryImages?.[0]?.src ??
+    outlet.image
+  const outletPlaceholderFallbacks =
+    outlet.menuGalleryImages?.[0]?.fallbacks ??
+    outlet.galleryImages?.[0]?.fallbacks ??
+    outlet.imageFallbacks
   const currentSrc = hasMenuImages ? images[activeIdx] : outletPlaceholderSrc
   const currentFallbacks = hasMenuImages
     ? buildImageFallbacks(currentSrc)

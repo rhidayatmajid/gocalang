@@ -14,7 +14,6 @@ import {
   ExternalLink,
   Copy,
   Check,
-  Info,
 } from 'lucide-react'
 import Navbar from '@/components/Navbar'
 import MenuCard from '@/components/MenuCard'
@@ -115,7 +114,7 @@ function OutletGallery({ images, outletName }: { images: GalleryImage[]; outletN
           className="text-lg font-black"
           style={{ fontFamily: 'Syne, sans-serif', color: '#fafaf9' }}
         >
-          Foto Outlet
+          Menu Kami
         </h2>
         <span className="text-sm" style={{ color: '#57534e' }}>
           ({images.length} foto)
@@ -159,7 +158,7 @@ function OutletGallery({ images, outletName }: { images: GalleryImage[]; outletN
         ))}
       </div>
 
-      {/* Lightbox */}
+      {/* Lightbox — full image, no crop */}
       <AnimatePresence>
         {lightbox !== null && (
           <motion.div
@@ -167,43 +166,57 @@ function OutletGallery({ images, outletName }: { images: GalleryImage[]; outletN
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] flex items-center justify-center p-4"
-            style={{ background: 'rgba(12,10,9,0.95)' }}
+            className="fixed inset-0 z-[100] flex items-center justify-center"
+            style={{ background: 'rgba(12,10,9,0.97)', padding: '60px 48px 48px' }}
             onClick={() => setLightbox(null)}
           >
             {/* Close */}
             <button
               onClick={() => setLightbox(null)}
-              className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold"
-              style={{ background: 'rgba(68,64,60,0.8)', color: '#fafaf9' }}
+              className="absolute top-4 right-4 w-10 h-10 rounded-full flex items-center justify-center text-lg font-bold z-10"
+              style={{ background: 'rgba(68,64,60,0.9)', color: '#fafaf9' }}
             >
               ✕
             </button>
 
             {/* Counter */}
             <div
-              className="absolute top-4 left-1/2 -translate-x-1/2 text-sm px-3 py-1 rounded-full"
-              style={{ background: 'rgba(68,64,60,0.7)', color: '#d6d3d1' }}
+              className="absolute top-4 left-1/2 -translate-x-1/2 text-sm px-3 py-1 rounded-full z-10"
+              style={{ background: 'rgba(68,64,60,0.8)', color: '#d6d3d1' }}
             >
               {lightbox + 1} / {images.length}
             </div>
 
-            {/* Image */}
+            {/* Image — fills available space, never crops */}
             <motion.div
               key={lightbox}
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.88, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 25 }}
-              className="relative max-w-3xl max-h-[80dvh] w-full rounded-2xl overflow-hidden"
+              exit={{ scale: 0.88, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 28 }}
+              className="relative flex items-center justify-center w-full h-full"
               onClick={(e) => e.stopPropagation()}
             >
-              <FallbackImage
+              <img
+                key={images[lightbox].src}
                 src={images[lightbox].src}
-                fallbacks={images[lightbox].fallbacks}
                 alt={`${outletName} foto ${lightbox + 1}`}
-                className="w-full h-full max-h-[80dvh]"
-                imgClassName="object-contain"
+                className="rounded-xl"
+                style={{
+                  maxWidth: '100%',
+                  maxHeight: '100%',
+                  width: 'auto',
+                  height: 'auto',
+                  objectFit: 'contain',
+                  display: 'block',
+                }}
+                onError={(e) => {
+                  const fb = images[lightbox].fallbacks
+                  const el = e.currentTarget
+                  const cur = el.src
+                  const next = fb.find(u => u !== cur)
+                  if (next) el.src = next
+                }}
               />
             </motion.div>
 
@@ -212,15 +225,15 @@ function OutletGallery({ images, outletName }: { images: GalleryImage[]; outletN
               <>
                 <button
                   onClick={(e) => { e.stopPropagation(); setLightbox((l) => ((l ?? 0) - 1 + images.length) % images.length) }}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(68,64,60,0.8)', color: '#fafaf9' }}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center text-xl"
+                  style={{ background: 'rgba(68,64,60,0.85)', color: '#fafaf9' }}
                 >
                   ‹
                 </button>
                 <button
                   onClick={(e) => { e.stopPropagation(); setLightbox((l) => ((l ?? 0) + 1) % images.length) }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center"
-                  style={{ background: 'rgba(68,64,60,0.8)', color: '#fafaf9' }}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 w-11 h-11 rounded-full flex items-center justify-center text-xl"
+                  style={{ background: 'rgba(68,64,60,0.85)', color: '#fafaf9' }}
                 >
                   ›
                 </button>
@@ -233,79 +246,6 @@ function OutletGallery({ images, outletName }: { images: GalleryImage[]; outletN
   )
 }
 
-// ─── Debug Panel (dev only) ───────────────────────────────────────────────────
-
-function DebugPanel({
-  outletId,
-  allMenuIds,
-  menuError,
-}: {
-  outletId: string
-  allMenuIds: string[]
-  menuError: string | null
-}) {
-  const [open, setOpen] = useState(false)
-  const sheetName = getMenuSheetFoundName()
-
-  return (
-    <div className="mt-4">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 text-xs px-3 py-1.5 rounded-lg"
-        style={{ background: '#292524', color: '#78716c' }}
-      >
-        <Info size={11} />
-        Debug: Sheet connection
-      </button>
-      {open && (
-        <div
-          className="mt-2 p-3 rounded-xl text-xs font-mono space-y-1.5 leading-relaxed"
-          style={{ background: '#0c0a09', border: '1px solid #292524', color: '#a8a29e' }}
-        >
-          <p>
-            URL outletId:{' '}
-            <span style={{ color: '#f97316' }}>"{outletId}"</span>
-          </p>
-          <p>
-            Menu sheet loaded:{' '}
-            <span style={{ color: sheetName ? '#4ade80' : '#ef4444' }}>
-              {sheetName ? `"${sheetName}" ✓` : 'NOT FOUND ✗'}
-            </span>
-          </p>
-
-          {menuError && (
-            <p style={{ color: '#ef4444' }}>Error: {menuError}</p>
-          )}
-
-          {!menuError && (
-            <>
-              <p>OutletIDs in Menu sheet:</p>
-              {allMenuIds.length === 0 ? (
-                <p style={{ color: '#ef4444' }}>
-                  — Sheet accessible but 0 rows returned.
-                  <br />Check: does the Menu sheet have data? Is row 1 the header row?
-                </p>
-              ) : (
-                allMenuIds.map((id, i) => {
-                  const match = id.trim().toLowerCase() === outletId.trim().toLowerCase()
-                  return (
-                    <p key={i} style={{ color: match ? '#4ade80' : '#57534e' }}>
-                      "{id}"{match ? ' ✓ MATCH' : ' ✗'}
-                    </p>
-                  )
-                })
-              )}
-            </>
-          )}
-
-          <p style={{ color: '#44403c', marginTop: 8 }}>
-            ↑ Check browser Console for full fetch logs
-          </p>
-        </div>
-      )}
-    </div>
-  )
-}
 
 // ─── OutletDetail ─────────────────────────────────────────────────────────────
 
@@ -315,11 +255,9 @@ export default function OutletDetail() {
 
   const [outlet, setOutlet] = useState<Outlet | null>(null)
   const [menuItems, setMenuItems] = useState<MenuItem[]>([])
-  const [allMenuIds, setAllMenuIds] = useState<string[]>([])
   const [loadingOutlet, setLoadingOutlet] = useState(true)
   const [loadingMenu, setLoadingMenu] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [menuError, setMenuError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [activeTab, setActiveTab] = useState('semua')
 
@@ -341,20 +279,16 @@ export default function OutletDetail() {
       try {
         const allItems = await fetchMenuItems()
         const uniqueOutletIds = [...new Set(allItems.map((i) => i.outletId))]
-        setAllMenuIds(uniqueOutletIds)
 
         const normalizedId = id.trim().toLowerCase()
         const matched = allItems.filter((i) => i.outletId.trim().toLowerCase() === normalizedId)
         setMenuItems(matched)
-        setMenuError(null)
 
         console.log(`[OutletDetail] id="${id}", matched: ${matched.length}`)
         console.log('[OutletDetail] All outletIds:', uniqueOutletIds)
       } catch (menuErr) {
         const msg = menuErr instanceof Error ? menuErr.message : 'Gagal memuat menu'
         console.error('[OutletDetail] Menu fetch error:', menuErr)
-        setMenuError(msg)
-        setAllMenuIds([])
         setMenuItems([])
       }
     } catch (err) {
@@ -546,14 +480,16 @@ export default function OutletDetail() {
                     <BankInfoChip info={outlet.bankInfo} />
                   </div>
                 )}
-
-                {/* Debug panel (dev mode only) */}
-                {id && <DebugPanel outletId={id} allMenuIds={allMenuIds} menuError={menuError} />}
               </>
             ) : null}
           </motion.div>
         </div>
       </section>
+
+      {/* ─── Menu Kami Gallery (above menu) ─── */}
+      {!loadingOutlet && outlet && outlet.menuGalleryImages && outlet.menuGalleryImages.length > 0 && (
+        <OutletGallery images={outlet.menuGalleryImages} outletName={outlet.name} />
+      )}
 
       {/* ─── Menu Section ─── */}
       <section className="max-w-6xl mx-auto px-4 py-8 pb-28">
@@ -588,27 +524,6 @@ export default function OutletDetail() {
             </div>
           )}
         </div>
-
-        {/* Menu fetch error */}
-        {!loadingMenu && menuError && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="flex flex-col items-center justify-center py-16 gap-3 text-center"
-          >
-            <AlertCircle size={32} style={{ color: '#f97316' }} />
-            <p className="font-semibold" style={{ fontFamily: 'Syne', color: '#fafaf9' }}>
-              Gagal Memuat Menu
-            </p>
-            <p className="text-xs max-w-sm leading-relaxed" style={{ color: '#78716c' }}>
-              {menuError}
-            </p>
-            <Button variant="secondary" size="sm" onClick={loadData}>
-              <RefreshCw size={13} /> Coba Lagi
-            </Button>
-          </motion.div>
-        )}
-
         {/* Loading */}
         {loadingMenu && (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
@@ -712,11 +627,6 @@ export default function OutletDetail() {
           </motion.div>
         )}
       </section>
-
-      {/* ─── Outlet Photo Gallery ─── */}
-      {!loadingOutlet && outlet && outlet.galleryImages && outlet.galleryImages.length > 0 && (
-        <OutletGallery images={outlet.galleryImages} outletName={outlet.name} />
-      )}
 
       {/* ─── Floating WA button ─── */}
       {outlet?.waNumber && !loadingOutlet && (
