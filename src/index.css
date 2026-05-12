@@ -4,22 +4,30 @@
   --font-display: "Syne", sans-serif;
   --font-body: "Outfit", sans-serif;
 
-  --color-brand-orange: #f97316;
-  --color-brand-orange-dark: #ea580c;
-  --color-brand-orange-light: #fb923c;
-  --color-brand-glow: rgba(249, 115, 22, 0.3);
+  /* ── Maxim Brand Colors ───────────────────────────────────────── */
+  --color-maxim-yellow:      #FFD600;
+  --color-maxim-yellow-dark: #F5C800;
+  --color-maxim-yellow-soft: #FFE566;
+  --color-maxim-yellow-glow: rgba(255, 214, 0, 0.28);
 
-  --color-surface-base: #0c0a09;
-  --color-surface-card: #1c1917;
-  --color-surface-raised: #292524;
-  --color-surface-hover: #3a3330;
-  --color-surface-border: #44403c;
-  --color-surface-muted: #57534e;
+  --color-maxim-red:         #D32F2F;
+  --color-maxim-red-dark:    #B71C1C;
+  --color-maxim-red-light:   #EF5350;
+  --color-maxim-red-glow:    rgba(211, 47, 47, 0.25);
 
-  --color-text-primary: #fafaf9;
-  --color-text-secondary: #d6d3d1;
-  --color-text-muted: #a8a29e;
-  --color-text-dim: #78716c;
+  /* ── Surfaces (dark base unchanged) ──────────────────────────── */
+  --color-surface-base:    #0a0a0a;
+  --color-surface-card:    #161616;
+  --color-surface-raised:  #222222;
+  --color-surface-hover:   #2e2e2e;
+  --color-surface-border:  #383838;
+  --color-surface-muted:   #505050;
+
+  /* ── Text ─────────────────────────────────────────────────────── */
+  --color-text-primary:    #fafafa;
+  --color-text-secondary:  #d4d4d4;
+  --color-text-muted:      #a3a3a3;
+  --color-text-dim:        #737373;
 }
 
 *,
@@ -34,6 +42,7 @@ html {
 
 body {
   font-family: var(--font-body);
+  transition: background 0.3s ease, color 0.3s ease;
   background-color: var(--color-surface-base);
   color: var(--color-text-primary);
   -webkit-font-smoothing: antialiased;
@@ -49,46 +58,42 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar { width: 5px; height: 5px; }
 ::-webkit-scrollbar-track { background: var(--color-surface-base); }
 ::-webkit-scrollbar-thumb { background: var(--color-surface-border); border-radius: 9999px; }
-::-webkit-scrollbar-thumb:hover { background: var(--color-brand-orange); }
+::-webkit-scrollbar-thumb:hover { background: var(--color-maxim-yellow); }
 
-/* Gradient text utility */
+/* Gradient text — Maxim yellow */
 .text-gradient {
-  background: linear-gradient(135deg, #f97316 0%, #fb923c 50%, #fbbf24 100%);
+  background: linear-gradient(135deg, #FFD600 0%, #FFE566 50%, #FFF0A0 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
 }
 
-/* Glow effect */
-.glow-orange {
-  box-shadow: 0 0 20px rgba(249, 115, 22, 0.4), 0 0 40px rgba(249, 115, 22, 0.1);
+[data-theme="light"] .text-gradient {
+  background: linear-gradient(135deg, #B89200 0%, #D4A800 50%, #FFD600 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.glow-orange-sm {
-  box-shadow: 0 0 10px rgba(249, 115, 22, 0.3);
+/* Glow effects */
+.glow-yellow {
+  box-shadow: 0 0 20px rgba(255,214,0,0.4), 0 0 40px rgba(255,214,0,0.1);
+}
+.glow-yellow-sm {
+  box-shadow: 0 0 10px rgba(255,214,0,0.3);
 }
 
-/* Noise texture overlay */
-.noise-overlay::after {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
-  pointer-events: none;
-  border-radius: inherit;
-}
-
-/* Card shimmer loading */
+/* Skeleton shimmer */
 @keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
 }
 
 .skeleton {
   background: linear-gradient(
     90deg,
     var(--color-surface-raised) 25%,
-    var(--color-surface-hover) 50%,
+    var(--color-surface-hover)  50%,
     var(--color-surface-raised) 75%
   );
   background-size: 200% 100%;

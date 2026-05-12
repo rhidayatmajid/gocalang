@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { ImageOff } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTheme } from '@/context/ThemeContext'
 
 interface Props {
   src: string
@@ -41,11 +42,12 @@ export default function FallbackImage({
 
   const current = all[idx]
 
+  const { c } = useTheme()
   return (
-    <div className={cn('relative overflow-hidden bg-[#1c1917]', className)}>
+    <div className={cn('relative overflow-hidden', className)} style={{ background: c.imgPlaceholder }}>
       {failed || !current ? (
         <div className="w-full h-full flex items-center justify-center">
-          {placeholderIcon ?? <ImageOff size={28} className="text-[#57534e]" />}
+          {placeholderIcon ?? <ImageOff size={28} style={{ color: c.imgPlaceholderIcon }} />}
         </div>
       ) : (
         <img
